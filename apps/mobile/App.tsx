@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -8,9 +8,10 @@ import { CatalogScreen } from "./src/screens/CatalogScreen";
 import { CompanyScreen } from "./src/screens/CompanyScreen";
 import { AdminHomeScreen } from "./src/screens/AdminHomeScreen";
 import { VisitorGateScreen } from "./src/screens/VisitorGateScreen";
+import { ProfileScreen } from "./src/screens/ProfileScreen";
 import { colors } from "./src/theme";
 
-type MainTab = "catalog" | "company" | "admin";
+type MainTab = "catalog" | "company" | "admin" | "profile";
 
 function TabButton({
   label,
@@ -33,6 +34,10 @@ function RootTabs() {
   const { isAdmin } = useAuth();
   const { visitor, loading } = useVisitor();
 
+  useEffect(() => {
+    if (!visitor) setTab("catalog");
+  }, [visitor]);
+
   if (loading) {
     return <SafeAreaView style={styles.root} edges={["top", "bottom"]} />;
   }
@@ -53,6 +58,7 @@ function RootTabs() {
         {tab === "catalog" && <CatalogScreen />}
         {tab === "company" && <CompanyScreen />}
         {tab === "admin" && <AdminHomeScreen />}
+        {tab === "profile" && <ProfileScreen />}
       </View>
       <View style={styles.tabBar}>
         <TabButton label="Catalog" active={tab === "catalog"} onPress={() => setTab("catalog")} />
@@ -64,6 +70,7 @@ function RootTabs() {
             onPress={() => setTab("admin")}
           />
         )}
+        <TabButton label="Profile" active={tab === "profile"} onPress={() => setTab("profile")} />
       </View>
     </SafeAreaView>
   );

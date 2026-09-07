@@ -22,6 +22,7 @@ interface VisitorState {
   visitor: VisitorInfo | null;
   loading: boolean;
   submit: (input: VisitorFormInput) => Promise<void>;
+  signOut: () => void;
 }
 
 const VisitorContext = createContext<VisitorState | undefined>(undefined);
@@ -59,7 +60,18 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  return <VisitorContext.Provider value={{ visitor, loading, submit }}>{children}</VisitorContext.Provider>;
+  function signOut() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Non-fatal.
+    }
+    setVisitor(null);
+  }
+
+  return (
+    <VisitorContext.Provider value={{ visitor, loading, submit, signOut }}>{children}</VisitorContext.Provider>
+  );
 }
 
 export function useVisitor(): VisitorState {

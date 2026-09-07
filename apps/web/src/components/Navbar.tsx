@@ -21,7 +21,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 }
 
 export function Navbar() {
-  const { isAdmin, profile, signOut, loading } = useAuth();
+  const { isAdmin, loading } = useAuth();
   const { visitor } = useVisitor();
 
   return (
@@ -36,14 +36,7 @@ export function Navbar() {
           {!loading && visitor?.isAdminEmail && (
             <NavLink href={isAdmin ? "/admin" : "/admin/login"}>Admin</NavLink>
           )}
-          {!loading && profile && (
-            <button
-              onClick={() => signOut()}
-              className="px-3 py-2 text-sm font-medium rounded-md text-neutral-700 hover:bg-neutral-100"
-            >
-              Sign out
-            </button>
-          )}
+          <NavLink href="/profile">Profile</NavLink>
         </nav>
       </div>
     </header>

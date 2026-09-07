@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useAuth } from "../lib/useAuth";
+import { useVisitor } from "../lib/useVisitor";
 import { colors } from "../theme";
 
 export function AdminLoginScreen() {
   const { signIn, profile } = useAuth();
-  const [email, setEmail] = useState("");
+  const { visitor } = useVisitor();
+  const email = visitor?.email ?? "";
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -26,21 +28,15 @@ export function AdminLoginScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Admin sign in</Text>
       <Text style={styles.subtitle}>
-        Only admins can manage the catalog. End users don&apos;t need an account to browse.
+        Signing in as <Text style={{ fontWeight: "600", color: colors.text }}>{email}</Text>.
+        Enter your admin password to continue.
       </Text>
-      <Text style={styles.label}>Email</Text>
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        style={styles.input}
-      />
       <Text style={styles.label}>Password</Text>
       <TextInput
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        autoFocus
         style={styles.input}
       />
       {error && <Text style={styles.error}>{error}</Text>}
