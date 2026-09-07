@@ -87,3 +87,10 @@ export interface NewVisitorLead {
   phone_number: string;
   email: string;
 }
+
+export interface ExistingVisitorLead {
+  name: string;
+  company_name: string;
+  phone_country_code: string;
+  phone_number: string;
+}

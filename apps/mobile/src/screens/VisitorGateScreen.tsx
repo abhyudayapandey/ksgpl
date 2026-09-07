@@ -1,25 +1,19 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { isValidCountryCode, isValidEmail, isValidPhoneNumber } from "@ksgpl/shared";
 import { useVisitor, type VisitorFormInput } from "../lib/useVisitor";
 import { colors } from "../theme";
 
-export function VisitorGateScreen() {
+function NewUserForm({
+  form,
+  setForm,
+  onSwitchToExisting,
+}: {
+  form: VisitorFormInput;
+  setForm: (form: VisitorFormInput) => void;
+  onSwitchToExisting: () => void;
+}) {
   const { submit } = useVisitor();
-  const [form, setForm] = useState<VisitorFormInput>({
-    name: "",
-    companyName: "",
-    phoneCountryCode: "+91",
-    phoneNumber: "",
-    email: "",
-  });
   const [errors, setErrors] = useState<Partial<Record<keyof VisitorFormInput, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -49,16 +43,9 @@ export function VisitorGateScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 20, gap: 12 }}>
-      <Text style={styles.title}>KSGPL Catalog</Text>
-      <Text style={styles.subtitle}>Tell us a bit about yourself to view the product catalog.</Text>
-
+    <View style={{ gap: 8 }}>
       <Text style={styles.label}>Name</Text>
-      <TextInput
-        value={form.name}
-        onChangeText={(t) => setForm({ ...form, name: t })}
-        style={styles.input}
-      />
+      <TextInput value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} style={styles.input} />
       {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
       <Text style={styles.label}>Company name</Text>
@@ -104,6 +91,119 @@ export function VisitorGateScreen() {
       <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={submitting}>
         <Text style={styles.buttonText}>{submitting ? "Please wait…" : "View Catalog"}</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={onSwitchToExisting}>
+        <Text style={styles.link}>Existing user?</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function ExistingUserForm({
+  onSwitchToNew,
+  onNotFound,
+}: {
+  onSwitchToNew: () => void;
+  onNotFound: (email: string) => void;
+}) {
+  const { lookupExisting, submit } = useVisitor();
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit() {
+    if (!isValidEmail(email)) {
+      setError("Enter a valid email");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const found = await lookupExisting(email);
+      if (!found) {
+        onNotFound(email);
+        return;
+      }
+      await submit({
+        name: found.name,
+        companyName: found.company_name,
+        phoneCountryCode: found.phone_country_code,
+        phoneNumber: found.phone_number,
+        email,
+      });
+    } catch (err: any) {
+      setError(err.message ?? "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <View style={{ gap: 8 }}>
+      <Text style={styles.label}>Email</Text>
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+        autoFocus
+        style={styles.input}
+      />
+      {error && <Text style={styles.errorText}>{error}</Text>}
+
+      <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={submitting}>
+        <Text style={styles.buttonText}>{submitting ? "Please wait…" : "Continue"}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onSwitchToNew}>
+        <Text style={styles.link}>New here? Enter your details</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+export function VisitorGateScreen() {
+  const [mode, setMode] = useState<"new" | "existing">("new");
+  const [notice, setNotice] = useState<string | null>(null);
+  const [form, setForm] = useState<VisitorFormInput>({
+    name: "",
+    companyName: "",
+    phoneCountryCode: "+91",
+    phoneNumber: "",
+    email: "",
+  });
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={{ padding: 20, gap: 12 }}>
+      <Text style={styles.title}>KSGPL Catalog</Text>
+      <Text style={styles.subtitle}>
+        {mode === "new"
+          ? "Tell us a bit about yourself to view the product catalog."
+          : "Enter the email you used before to continue."}
+      </Text>
+
+      {notice && <Text style={styles.notice}>{notice}</Text>}
+
+      {mode === "new" ? (
+        <NewUserForm
+          form={form}
+          setForm={setForm}
+          onSwitchToExisting={() => {
+            setNotice(null);
+            setMode("existing");
+          }}
+        />
+      ) : (
+        <ExistingUserForm
+          onSwitchToNew={() => {
+            setNotice(null);
+            setMode("new");
+          }}
+          onNotFound={(email) => {
+            setForm((f) => ({ ...f, email }));
+            setNotice("We don't recognize that email yet. Please fill in your details below.");
+            setMode("new");
+          }}
+        />
+      )}
     </ScrollView>
   );
 }
@@ -112,6 +212,15 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   title: { fontSize: 20, fontWeight: "700", color: colors.brandDark },
   subtitle: { fontSize: 13, color: colors.muted, marginBottom: 8 },
+  notice: {
+    fontSize: 13,
+    color: "#b45309",
+    backgroundColor: "#fffbeb",
+    borderWidth: 1,
+    borderColor: "#fde68a",
+    borderRadius: 8,
+    padding: 10,
+  },
   label: { fontSize: 13, fontWeight: "600", color: colors.text },
   input: {
     borderWidth: 1,
@@ -130,4 +239,5 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   buttonText: { color: "#fff", fontWeight: "600" },
+  link: { color: colors.brandDark, fontSize: 13, textAlign: "left", marginTop: 4 },
 });

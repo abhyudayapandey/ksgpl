@@ -1,7 +1,12 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { checkIsAdminEmail, createVisitorLead } from "@ksgpl/shared";
+import {
+  checkIsAdminEmail,
+  createVisitorLead,
+  getVisitorLeadByEmail,
+  type ExistingVisitorLead,
+} from "@ksgpl/shared";
 import { getSupabase } from "./supabase";
 
 const STORAGE_KEY = "ksgpl_visitor";
@@ -22,6 +27,7 @@ interface VisitorState {
   visitor: VisitorInfo | null;
   loading: boolean;
   submit: (input: VisitorFormInput) => Promise<void>;
+  lookupExisting: (email: string) => Promise<ExistingVisitorLead | null>;
   signOut: () => void;
 }
 
@@ -43,21 +49,27 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
 
   async function submit(input: VisitorFormInput) {
     const db = getSupabase();
+    const email = input.email.trim().toLowerCase();
     await createVisitorLead(db, {
       name: input.name,
       company_name: input.companyName,
       phone_country_code: input.phoneCountryCode,
       phone_number: input.phoneNumber,
-      email: input.email,
+      email,
     });
-    const isAdminEmail = await checkIsAdminEmail(db, input.email);
-    const full: VisitorInfo = { ...input, isAdminEmail };
+    const isAdminEmail = await checkIsAdminEmail(db, email);
+    const full: VisitorInfo = { ...input, email, isAdminEmail };
     setVisitor(full);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(full));
     } catch {
       // Non-fatal — visitor just won't be remembered on next visit.
     }
+  }
+
+  async function lookupExisting(email: string): Promise<ExistingVisitorLead | null> {
+    const db = getSupabase();
+    return getVisitorLeadByEmail(db, email.trim().toLowerCase());
   }
 
   function signOut() {
@@ -70,7 +82,9 @@ export function VisitorProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <VisitorContext.Provider value={{ visitor, loading, submit, signOut }}>{children}</VisitorContext.Provider>
+    <VisitorContext.Provider value={{ visitor, loading, submit, lookupExisting, signOut }}>
+      {children}
+    </VisitorContext.Provider>
   );
 }
 

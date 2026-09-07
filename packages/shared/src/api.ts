@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   CatalogType,
   CompanyInfo,
+  ExistingVisitorLead,
   NewCatalogType,
   NewProduct,
   NewVisitorLead,
@@ -192,13 +193,26 @@ export async function uploadImage(
 // ---------- Visitor gate (no-password lead capture in front of the catalog) ----------
 
 export async function createVisitorLead(db: SupabaseClient, input: NewVisitorLead): Promise<void> {
+  // Upsert on email (unique) so repeat visits from a different browser/device
+  // update the same lead instead of creating duplicates or erroring.
   // No .select() here on purpose: the select-admin-only RLS policy on this
-  // table means a non-admin visitor can insert a row but can't read it back,
-  // and Postgres's INSERT...RETURNING is itself subject to the SELECT
-  // policy — chaining .select() would make even a successful insert report
-  // as an RLS violation. We don't use the inserted row anyway.
-  const { error } = await db.from("visitor_leads").insert(input);
+  // table means a non-admin visitor can write a row but can't read it back,
+  // and Postgres's INSERT/UPDATE...RETURNING is itself subject to the SELECT
+  // policy — chaining .select() would make even a successful write report
+  // as an RLS violation. We don't use the written row anyway.
+  const { error } = await db.from("visitor_leads").upsert(input, { onConflict: "email" });
   if (error) throw error;
+}
+
+/** Looks up a returning visitor's previously-entered details by email alone (no password). */
+export async function getVisitorLeadByEmail(
+  db: SupabaseClient,
+  email: string
+): Promise<ExistingVisitorLead | null> {
+  const { data, error } = await db.rpc("get_visitor_lead_by_email", { check_email: email });
+  if (error) throw error;
+  if (!data || data.length === 0) return null;
+  return data[0];
 }
 
 /** True if the given email belongs to an admin — used to decide whether to show the Admin menu. */
