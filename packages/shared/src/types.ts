@@ -69,3 +69,21 @@ export interface NewProduct {
 export type UpdateProduct = Partial<NewProduct>;
 export type UpdateCatalogType = Partial<NewCatalogType>;
 export type UpdateCompanyInfo = Partial<Omit<CompanyInfo, "id" | "updated_at">>;
+
+export interface VisitorLead {
+  id: string;
+  name: string;
+  company_name: string;
+  phone_country_code: string;
+  phone_number: string;
+  email: string;
+  created_at: string;
+}
+
+export interface NewVisitorLead {
+  name: string;
+  company_name: string;
+  phone_country_code: string;
+  phone_number: string;
+  email: string;
+}

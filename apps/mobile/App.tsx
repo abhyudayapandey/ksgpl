@@ -3,9 +3,11 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { AuthProvider, useAuth } from "./src/lib/useAuth";
+import { VisitorProvider, useVisitor } from "./src/lib/useVisitor";
 import { CatalogScreen } from "./src/screens/CatalogScreen";
 import { CompanyScreen } from "./src/screens/CompanyScreen";
 import { AdminHomeScreen } from "./src/screens/AdminHomeScreen";
+import { VisitorGateScreen } from "./src/screens/VisitorGateScreen";
 import { colors } from "./src/theme";
 
 type MainTab = "catalog" | "company" | "admin";
@@ -29,6 +31,20 @@ function TabButton({
 function RootTabs() {
   const [tab, setTab] = useState<MainTab>("catalog");
   const { isAdmin } = useAuth();
+  const { visitor, loading } = useVisitor();
+
+  if (loading) {
+    return <SafeAreaView style={styles.root} edges={["top", "bottom"]} />;
+  }
+
+  if (!visitor) {
+    return (
+      <SafeAreaView style={styles.root} edges={["top", "bottom"]}>
+        <StatusBar style="dark" />
+        <VisitorGateScreen />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.root} edges={["top", "bottom"]}>
@@ -41,11 +57,13 @@ function RootTabs() {
       <View style={styles.tabBar}>
         <TabButton label="Catalog" active={tab === "catalog"} onPress={() => setTab("catalog")} />
         <TabButton label="Company" active={tab === "company"} onPress={() => setTab("company")} />
-        <TabButton
-          label={isAdmin ? "Admin" : "Admin login"}
-          active={tab === "admin"}
-          onPress={() => setTab("admin")}
-        />
+        {visitor.isAdminEmail && (
+          <TabButton
+            label={isAdmin ? "Admin" : "Admin login"}
+            active={tab === "admin"}
+            onPress={() => setTab("admin")}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -54,9 +72,11 @@ function RootTabs() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <RootTabs />
-      </AuthProvider>
+      <VisitorProvider>
+        <AuthProvider>
+          <RootTabs />
+        </AuthProvider>
+      </VisitorProvider>
     </SafeAreaProvider>
   );
 }

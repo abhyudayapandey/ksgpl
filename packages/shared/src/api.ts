@@ -4,11 +4,13 @@ import type {
   CompanyInfo,
   NewCatalogType,
   NewProduct,
+  NewVisitorLead,
   Product,
   Profile,
   UpdateCatalogType,
   UpdateCompanyInfo,
   UpdateProduct,
+  VisitorLead,
 } from "./types";
 
 /** Every helper takes the supabase client explicitly — no shared module-level singleton. */
@@ -186,4 +188,22 @@ export async function uploadImage(
   if (error) throw error;
   const { data } = db.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
+}
+
+// ---------- Visitor gate (no-password lead capture in front of the catalog) ----------
+
+export async function createVisitorLead(
+  db: SupabaseClient,
+  input: NewVisitorLead
+): Promise<VisitorLead> {
+  const { data, error } = await db.from("visitor_leads").insert(input).select().single();
+  if (error) throw error;
+  return data;
+}
+
+/** True if the given email belongs to an admin — used to decide whether to show the Admin menu. */
+export async function checkIsAdminEmail(db: SupabaseClient, email: string): Promise<boolean> {
+  const { data, error } = await db.rpc("is_admin_email", { check_email: email });
+  if (error) throw error;
+  return Boolean(data);
 }

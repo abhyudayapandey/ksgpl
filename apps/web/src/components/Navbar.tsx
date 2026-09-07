@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
+import { useVisitor } from "@/lib/useVisitor";
 
 function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
@@ -21,6 +22,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 
 export function Navbar() {
   const { isAdmin, profile, signOut, loading } = useAuth();
+  const { visitor } = useVisitor();
 
   return (
     <header className="border-b bg-white sticky top-0 z-10">
@@ -31,8 +33,9 @@ export function Navbar() {
         <nav className="flex items-center gap-1">
           <NavLink href="/catalog">Catalog</NavLink>
           <NavLink href="/company">Company</NavLink>
-          {!loading && isAdmin && <NavLink href="/admin">Admin</NavLink>}
-          {!loading && !profile && <NavLink href="/admin/login">Admin login</NavLink>}
+          {!loading && visitor?.isAdminEmail && (
+            <NavLink href={isAdmin ? "/admin" : "/admin/login"}>Admin</NavLink>
+          )}
           {!loading && profile && (
             <button
               onClick={() => signOut()}
