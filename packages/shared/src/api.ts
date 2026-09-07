@@ -10,7 +10,6 @@ import type {
   UpdateCatalogType,
   UpdateCompanyInfo,
   UpdateProduct,
-  VisitorLead,
 } from "./types";
 
 /** Every helper takes the supabase client explicitly — no shared module-level singleton. */
@@ -192,13 +191,14 @@ export async function uploadImage(
 
 // ---------- Visitor gate (no-password lead capture in front of the catalog) ----------
 
-export async function createVisitorLead(
-  db: SupabaseClient,
-  input: NewVisitorLead
-): Promise<VisitorLead> {
-  const { data, error } = await db.from("visitor_leads").insert(input).select().single();
+export async function createVisitorLead(db: SupabaseClient, input: NewVisitorLead): Promise<void> {
+  // No .select() here on purpose: the select-admin-only RLS policy on this
+  // table means a non-admin visitor can insert a row but can't read it back,
+  // and Postgres's INSERT...RETURNING is itself subject to the SELECT
+  // policy — chaining .select() would make even a successful insert report
+  // as an RLS violation. We don't use the inserted row anyway.
+  const { error } = await db.from("visitor_leads").insert(input);
   if (error) throw error;
-  return data;
 }
 
 /** True if the given email belongs to an admin — used to decide whether to show the Admin menu. */
