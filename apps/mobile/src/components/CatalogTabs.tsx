@@ -32,8 +32,9 @@ export function CatalogTabs({
 }
 
 const styles = StyleSheet.create({
-  row: { flexGrow: 0, marginBottom: 8 },
+  row: { flexGrow: 0, flexShrink: 0, marginBottom: 8 },
   tab: {
+    flexShrink: 0,
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,

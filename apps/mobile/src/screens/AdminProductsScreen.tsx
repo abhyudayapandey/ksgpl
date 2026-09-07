@@ -244,6 +244,7 @@ export function AdminProductsScreen() {
         </TouchableOpacity>
       </View>
       <FlatList
+        style={{ flex: 1 }}
         data={products}
         keyExtractor={(p) => p.id}
         contentContainerStyle={{ padding: 12, paddingTop: 0, gap: 8 }}

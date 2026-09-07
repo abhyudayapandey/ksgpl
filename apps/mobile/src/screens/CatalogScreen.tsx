@@ -56,6 +56,7 @@ export function CatalogScreen() {
         <Text style={styles.empty}>No products match your search.</Text>
       )}
       <FlatList
+        style={{ flex: 1 }}
         data={products}
         keyExtractor={(p) => p.id}
         numColumns={2}

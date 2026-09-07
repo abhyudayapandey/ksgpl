@@ -111,6 +111,7 @@ export function AdminCatalogTypesScreen() {
       </View>
 
       <FlatList
+        style={{ flex: 1 }}
         data={types}
         keyExtractor={(t) => t.id}
         renderItem={({ item }) => (
