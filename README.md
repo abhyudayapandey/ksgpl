@@ -77,6 +77,21 @@ this at $0.
      the SQL Editor. That row's `role` becomes `'admin'`.
    - Now sign in from the app with that email/password — you'll land on
      the Admin dashboard.
+5. (Optional) Add the real product photos: the seeded products start with
+   no images. `supabase/seed/product-images/` has 28 photos cropped
+   straight from the KSGPL PDF catalog, one per seeded product, plus a
+   script that uploads them and attaches each to its matching product.
+   Run this from a machine/Codespace that has network access to Supabase
+   (a plain `node` script, no extra install needed since
+   `@supabase/supabase-js` is already a dependency at the repo root):
+   ```bash
+   SUPABASE_URL=https://your-project-ref.supabase.co \
+   SUPABASE_ANON_KEY=your-anon-key \
+   node supabase/seed/upload-images.js admin@example.com 'admin-password'
+   ```
+   It signs in as that admin (same RLS as the app itself, no service-role
+   key needed), uploads each photo to the `product-images` Storage bucket,
+   and updates the matching product's `image_url` by name. Safe to re-run.
 
 That's it — no server to deploy for the backend.
 
