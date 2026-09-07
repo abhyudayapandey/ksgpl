@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "KSGPL Catalog",
+    "slug": "ksgpl-catalog",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ksgpl.catalog"
+    },
+    "android": {
+      "package": "com.ksgpl.catalog",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

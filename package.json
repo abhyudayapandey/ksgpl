@@ -1,0 +1,19 @@
+{
+  "name": "ksgpl-catalog-poc",
+  "private": true,
+  "version": "0.1.0",
+  "description": "KSGPL catalog management POC — admin CRUD + end-user catalog viewer, web + mobile",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "web:dev": "npm run dev --workspace=apps/web",
+    "web:build": "npm run build --workspace=apps/web",
+    "mobile:start": "npm run start --workspace=apps/mobile",
+    "shared:build": "npm run build --workspace=packages/shared"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
