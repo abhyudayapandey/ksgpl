@@ -4,4 +4,4 @@
 
 update public.profiles
 set role = 'admin'
-where email = 'REPLACE_WITH_ADMIN_EMAIL@example.com';
+where lower(trim(email)) = lower(trim('REPLACE_WITH_ADMIN_EMAIL@example.com'));
