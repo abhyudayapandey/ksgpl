@@ -193,14 +193,21 @@ export async function uploadImage(
 // ---------- Visitor gate (no-password lead capture in front of the catalog) ----------
 
 export async function createVisitorLead(db: SupabaseClient, input: NewVisitorLead): Promise<void> {
-  // Upsert on email (unique) so repeat visits from a different browser/device
-  // update the same lead instead of creating duplicates or erroring.
-  // No .select() here on purpose: the select-admin-only RLS policy on this
-  // table means a non-admin visitor can write a row but can't read it back,
-  // and Postgres's INSERT/UPDATE...RETURNING is itself subject to the SELECT
-  // policy — chaining .select() would make even a successful write report
-  // as an RLS violation. We don't use the written row anyway.
-  const { error } = await db.from("visitor_leads").upsert(input, { onConflict: "email" });
+  // Goes through a SECURITY DEFINER RPC rather than a client-side
+  // .upsert(...): INSERT ... ON CONFLICT DO UPDATE needs to see the
+  // pre-existing conflicting row to resolve the conflict, and that
+  // visibility check is governed by the table's SELECT policy (admin-only
+  // here) — not the INSERT/UPDATE policies — so a plain client-side upsert
+  // fails with an RLS violation for every returning visitor regardless of
+  // how permissive those are. The RPC bypasses RLS entirely for its own
+  // internal insert-or-update, sidestepping this.
+  const { error } = await db.rpc("upsert_visitor_lead", {
+    p_name: input.name,
+    p_company_name: input.company_name,
+    p_phone_country_code: input.phone_country_code,
+    p_phone_number: input.phone_number,
+    p_email: input.email,
+  });
   if (error) throw error;
 }
 
